@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+**/.vs/
+.git
+.gitignore
+bin/
+obj/
+*.user
+*.db
+*.pptx
+TestResults/
