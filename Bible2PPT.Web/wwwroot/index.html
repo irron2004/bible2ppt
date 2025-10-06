@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bible2PPT Explorer</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --border: rgba(0, 0, 0, 0.12);
+      --accent: #3a7bd5;
+      --accent-light: rgba(58, 123, 213, 0.1);
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f6f7fb;
+      color: #1f2933;
+    }
+
+    .page {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    header {
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      margin: 0 0 12px;
+    }
+
+    p {
+      margin: 0 0 16px;
+      color: #52606d;
+    }
+
+    section {
+      margin-bottom: 24px;
+      padding: 16px;
+      border-radius: 12px;
+      background: #ffffff;
+      box-shadow: 0 6px 18px rgba(31, 41, 51, 0.08);
+    }
+
+    h2 {
+      font-size: 1.25rem;
+      margin: 0 0 12px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    select,
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      box-sizing: border-box;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    select:focus,
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-light);
+    }
+
+    button {
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: transform 0.1s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    button:not(:disabled):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(58, 123, 213, 0.24);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+    }
+
+    .verses {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 10px;
+      background: #f1f5fb;
+    }
+
+    .verse {
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #ffffff;
+      margin-bottom: 8px;
+      box-shadow: 0 2px 6px rgba(31, 41, 51, 0.1);
+    }
+
+    .verse-number {
+      font-weight: 700;
+      margin-right: 8px;
+      color: var(--accent);
+    }
+
+    .status {
+      font-size: 0.95rem;
+      color: #52606d;
+      min-height: 1.2em;
+    }
+
+    .error {
+      color: #d64545;
+      font-weight: 600;
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        padding: 16px;
+      }
+
+      section {
+        padding: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>Bible2PPT Explorer</h1>
+      <p>Browse the offline Bible dataset that powers Bible2PPT. Choose a bible, drill into books and chapters, or jump straight to a passage reference.</p>
+    </header>
+
+    <section id="browser">
+      <h2>Browse by Chapter</h2>
+      <div class="grid">
+        <div>
+          <label for="bibleSelect">Bible</label>
+          <select id="bibleSelect" disabled>
+            <option value="">Loading…</option>
+          </select>
+        </div>
+        <div>
+          <label for="bookSelect">Book</label>
+          <select id="bookSelect" disabled>
+            <option value="">Select a bible first</option>
+          </select>
+        </div>
+        <div>
+          <label for="chapterSelect">Chapter</label>
+          <select id="chapterSelect" disabled>
+            <option value="">Select a book first</option>
+          </select>
+        </div>
+      </div>
+      <div class="status" id="browserStatus"></div>
+      <div class="verses" id="verses"></div>
+    </section>
+
+    <section id="passage">
+      <h2>Quick Passage Lookup</h2>
+      <p>Enter a reference such as <code>John 3:16-18</code> or <code>Psalm 23</code> to fetch the verses.</p>
+      <div class="grid">
+        <div>
+          <label for="passageInput">Reference</label>
+          <input id="passageInput" type="text" placeholder="e.g. Genesis 1:1-5" />
+        </div>
+        <div style="display:flex;align-items:flex-end">
+          <button id="passageButton">Fetch Passage</button>
+        </div>
+      </div>
+      <div class="status" id="passageStatus"></div>
+      <div class="verses" id="passageResults"></div>
+    </section>
+  </div>
+
+  <script>
+    const bibleSelect = document.getElementById('bibleSelect');
+    const bookSelect = document.getElementById('bookSelect');
+    const chapterSelect = document.getElementById('chapterSelect');
+    const versesContainer = document.getElementById('verses');
+    const browserStatus = document.getElementById('browserStatus');
+
+    const passageInput = document.getElementById('passageInput');
+    const passageButton = document.getElementById('passageButton');
+    const passageStatus = document.getElementById('passageStatus');
+    const passageResults = document.getElementById('passageResults');
+
+    function setStatus(el, message, isError = false) {
+      el.textContent = message ?? '';
+      el.classList.toggle('error', Boolean(message) && isError);
+    }
+
+    async function fetchJson(url) {
+      const response = await fetch(url);
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`${response.status} ${response.statusText}: ${text}`);
+      }
+      return response.json();
+    }
+
+    async function loadBibles() {
+      try {
+        const bibles = await fetchJson('/api/bibles');
+        if (!Array.isArray(bibles) || bibles.length === 0) {
+          setStatus(browserStatus, 'No bibles are available.', true);
+          return;
+        }
+
+        bibleSelect.innerHTML = '<option value="">Choose a bible…</option>';
+        for (const bible of bibles) {
+          const option = document.createElement('option');
+          option.value = bible.id;
+          option.textContent = `${bible.name} (${bible.languageCode})`;
+          bibleSelect.appendChild(option);
+        }
+        bibleSelect.disabled = false;
+        setStatus(browserStatus, 'Select a bible to continue.');
+      } catch (error) {
+        console.error(error);
+        bibleSelect.innerHTML = '<option value="">Failed to load bibles</option>';
+        setStatus(browserStatus, 'Failed to load bibles. Check the service logs.', true);
+      }
+    }
+
+    async function loadBooks(bibleId) {
+      bookSelect.disabled = true;
+      chapterSelect.disabled = true;
+      bookSelect.innerHTML = '<option value="">Loading books…</option>';
+      chapterSelect.innerHTML = '<option value="">Select a book first</option>';
+      versesContainer.innerHTML = '';
+      setStatus(browserStatus, '');
+
+      if (!bibleId) {
+        bookSelect.innerHTML = '<option value="">Select a bible first</option>';
+        return;
+      }
+
+      try {
+        const books = await fetchJson(`/api/bibles/${bibleId}/books`);
+        if (!Array.isArray(books) || books.length === 0) {
+          setStatus(browserStatus, 'No books found for this bible.', true);
+          bookSelect.innerHTML = '<option value="">No books available</option>';
+          return;
+        }
+
+        bookSelect.innerHTML = '<option value="">Choose a book…</option>';
+        for (const book of books) {
+          const option = document.createElement('option');
+          option.value = book.id;
+          option.dataset.chapterCount = book.chapterCount;
+          option.textContent = `${book.name}`;
+          bookSelect.appendChild(option);
+        }
+        bookSelect.disabled = false;
+        setStatus(browserStatus, 'Select a book to see chapters.');
+      } catch (error) {
+        console.error(error);
+        bookSelect.innerHTML = '<option value="">Failed to load books</option>';
+        setStatus(browserStatus, 'Failed to load books.', true);
+      }
+    }
+
+    async function loadChapters(bookId) {
+      chapterSelect.disabled = true;
+      chapterSelect.innerHTML = '<option value="">Loading chapters…</option>';
+      versesContainer.innerHTML = '';
+      setStatus(browserStatus, '');
+
+      if (!bookId) {
+        chapterSelect.innerHTML = '<option value="">Select a book first</option>';
+        return;
+      }
+
+      try {
+        const data = await fetchJson(`/api/books/${bookId}/chapters`);
+        const chapters = data.chapters ?? [];
+        if (chapters.length === 0) {
+          setStatus(browserStatus, 'No chapters found for this book.', true);
+          chapterSelect.innerHTML = '<option value="">No chapters available</option>';
+          return;
+        }
+
+        chapterSelect.innerHTML = '<option value="">Choose a chapter…</option>';
+        for (const chapter of chapters) {
+          const option = document.createElement('option');
+          option.value = chapter.id;
+          option.textContent = `Chapter ${chapter.number}`;
+          chapterSelect.appendChild(option);
+        }
+        chapterSelect.disabled = false;
+        setStatus(browserStatus, 'Select a chapter to view verses.');
+      } catch (error) {
+        console.error(error);
+        chapterSelect.innerHTML = '<option value="">Failed to load chapters</option>';
+        setStatus(browserStatus, 'Failed to load chapters.', true);
+      }
+    }
+
+    async function loadVerses(chapterId) {
+      versesContainer.innerHTML = '';
+      if (!chapterId) {
+        return;
+      }
+
+      setStatus(browserStatus, 'Loading verses…');
+      try {
+        const data = await fetchJson(`/api/chapters/${chapterId}/verses`);
+        const verses = data.verses ?? [];
+        if (verses.length === 0) {
+          setStatus(browserStatus, 'No verses found for this chapter.', true);
+          return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        for (const verse of verses) {
+          const div = document.createElement('div');
+          div.className = 'verse';
+          const number = document.createElement('span');
+          number.className = 'verse-number';
+          number.textContent = verse.number;
+          const text = document.createElement('span');
+          text.textContent = verse.text;
+          div.append(number, text);
+          fragment.appendChild(div);
+        }
+        versesContainer.innerHTML = '';
+        versesContainer.appendChild(fragment);
+        setStatus(browserStatus, `Loaded ${verses.length} verse(s).`);
+      } catch (error) {
+        console.error(error);
+        setStatus(browserStatus, 'Failed to load verses.', true);
+      }
+    }
+
+    async function fetchPassage(reference) {
+      passageResults.innerHTML = '';
+      if (!reference) {
+        setStatus(passageStatus, 'Enter a passage reference.', true);
+        return;
+      }
+
+      setStatus(passageStatus, 'Loading passage…');
+      passageButton.disabled = true;
+      try {
+        const data = await fetchJson(`/api/passages?reference=${encodeURIComponent(reference)}`);
+        if (!Array.isArray(data) || data.length === 0) {
+          setStatus(passageStatus, 'No verses found for that reference.', true);
+          passageButton.disabled = false;
+          return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        let currentHeading = '';
+        for (const verse of data) {
+          const headingKey = `${verse.bookName} ${verse.chapter}`;
+          if (headingKey !== currentHeading) {
+            currentHeading = headingKey;
+            const heading = document.createElement('h3');
+            heading.textContent = headingKey;
+            fragment.appendChild(heading);
+          }
+
+          const div = document.createElement('div');
+          div.className = 'verse';
+          const number = document.createElement('span');
+          number.className = 'verse-number';
+          number.textContent = verse.verse;
+          const text = document.createElement('span');
+          text.textContent = verse.text;
+          div.append(number, text);
+          fragment.appendChild(div);
+        }
+
+        passageResults.appendChild(fragment);
+        setStatus(passageStatus, 'Passage loaded.');
+      } catch (error) {
+        console.error(error);
+        setStatus(passageStatus, 'Failed to load passage.', true);
+      } finally {
+        passageButton.disabled = false;
+      }
+    }
+
+    bibleSelect.addEventListener('change', event => loadBooks(event.target.value));
+    bookSelect.addEventListener('change', event => loadChapters(event.target.value));
+    chapterSelect.addEventListener('change', event => loadVerses(event.target.value));
+
+    passageButton.addEventListener('click', () => fetchPassage(passageInput.value.trim()));
+    passageInput.addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        fetchPassage(passageInput.value.trim());
+      }
+    });
+
+    loadBibles();
+  </script>
+</body>
+</html>
