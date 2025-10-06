@@ -27,13 +27,16 @@ var app = builder.Build();
 app.Services.UseBibleIndexService();
 app.Services.UseBibleService();
 
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.UseSwagger();
 app.UseSwaggerUI();
 
 var offlineSource = BibleSource.AvailableSources.First();
 var offlineSourceId = offlineSource.Id;
 
-app.MapGet("/", () => Results.Ok(new { message = "Bible2PPT service is up" }));
+app.MapGet("/api/status", () => Results.Ok(new { message = "Bible2PPT service is up" }));
 
 app.MapGet("/healthz", () => Results.Ok(new { status = "ok" }));
 
