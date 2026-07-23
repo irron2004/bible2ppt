@@ -1,6 +1,9 @@
 # 성경2PPT
 
 > 성경 구절을 PPT로 만들어주는 프로그램
+>
+> 현재 저장소에서는 이 디렉터리가 캐노니컬 솔루션 루트입니다. 아래 개발 명령은 상위
+> 저장소 루트에서 실행하는 경로로 표기합니다.
 
 <p align="center"><img src="https://user-images.githubusercontent.com/4927894/59970937-1377a600-95ad-11e9-93b4-66eed61dd932.png" alt="성경2PPT 스크린샷"></p>
 <p align="center">⬇️</p>
@@ -93,8 +96,9 @@
 
 ## 실행 요구 사항
 
-### .NET Framework 4.8
-**성경2PPT**를 실행하는 데 필요한 프레임워크입니다. [여기](http://go.microsoft.com/fwlink/?LinkId=2085155)에서 내려받아서 설치하세요.
+### .NET 6 Desktop Runtime (Windows)
+현재 소스의 데스크톱 앱은 `net6.0-windows`, 웹 API는 `net6.0`을 대상으로 합니다.
+데스크톱 앱 실행에는 Windows용 .NET 6 Desktop Runtime이 필요합니다.
 
 ### Microsoft PowerPoint 2007 이상
 PPT를 만들고 보는 데 필요한 프로그램입니다. 프로그램 구성 요소로 *Office 공유 기능* - *Visual Basic for Applications*를 설치해야 합니다.
@@ -108,7 +112,7 @@ PPT를 만들고 보는 데 필요한 프로그램입니다. 프로그램 구성
 
 - **개발 환경에서 실행**
   ```bash
-  dotnet run --project Bible2PPT.Web/Bible2PPT.Web.csproj
+  dotnet run --project Bible2PPT/Bible2PPT.Web/Bible2PPT.Web.csproj
   ```
   기본 포트는 `http://localhost:5000`이며 Swagger UI(`http://localhost:5000/swagger`)로 엔드포인트를 탐색할 수 있습니다.
 - **주요 엔드포인트**

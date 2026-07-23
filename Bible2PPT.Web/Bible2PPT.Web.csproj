@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Bible2PPT.Services.BibleService\Bible2PPT.Services.BibleService.csproj" />
-    <ProjectReference Include="..\Bible2PPT.Services.BibleIndexService\Bible2PPT.Services.BibleIndexService.csproj" />
+    <ProjectReference Include="..\Bible2PPT\Bible2PPT.Services.BibleService\Bible2PPT.Services.BibleService.csproj" />
+    <ProjectReference Include="..\Bible2PPT\Bible2PPT.Services.BibleIndexService\Bible2PPT.Services.BibleIndexService.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\bible.txt">
+    <Content Include="..\Bible2PPT\bible.txt">
       <Link>bible.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -1,0 +1,31 @@
+# .NET and Visual Studio outputs
+[Bb]in/
+[Oo]bj/
+[Tt]est[Rr]esults*/
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.log
+
+# Runtime data and local artifacts
+*.db
+*.db-shm
+*.db-wal
+~$*
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+*.key
+*.pem
+*.p12
+*.pfx
+
+# OS metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
